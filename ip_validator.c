@@ -1,4 +1,7 @@
-int     isGoodIPString(char *str)
+#include <stdlib.h>
+#include <string.h>
+
+int isGoodIPString(char *str)
 {
     short count_of_dots = 0, len = 0;
 
@@ -16,7 +19,7 @@ int     isGoodIPString(char *str)
     return (0);   
 }
 
-int     isValidIPAddress(char *str)
+int isValidIPAddress(char *str)
 {
     int tmp = 0;
 

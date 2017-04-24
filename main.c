@@ -1,88 +1,139 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "sniffer.h"
 
 #define ERR_MISSIN_COMD 0   //missing command
 #define ERR_UKNOWN_COMD 1   //unknown command
 #define ERR_BAD_IP_ADDR 2   //bad IP address
-#define ERR_USUPPORT_IF 3   //unsupport interface
+#define ERR_UKNOWN_IFAC 3   //unsupport interface
+#define ERR_TOO_MANY_AG 4   //too many arguments
 
-void oneWordCommands(char **argv);
-void twoWordsCommands(char **argv);
-void threeWordsCommands(char **argv);
-#warning change funct name
-void someName(short errno, char *program_name);
+void oneWordCommands(char **words);
+void twoWordsCommands(char **words);
+void threeWordsCommands(char **words);
+void printErrorMessage(short errno);
 
-int main(int argc, char **argv)
+int main(void)
 {
-    switch(argc)
+    char *line, **words;
+    int c_words;
+
+    while(1)
     {
-        case 2 :
-            //printf("argc == 2\n");
-            oneCommands(argv);
-            break;
-        case 3 :
-            twoWordsCommands(argv);
-            //printf("argc == 3\n");
-            break;
-        case 4 :
-            threeWordsCommands(char **argv)
-            //printf("argc == 4\n");
-            break;
-        default :
-            printf("error\n");
-            break;
+        line = mygetline();
+        c_words = countWords(line, ' ');
+        words = strsplit(line, ' ');
+
+        switch(c_words)
+        {
+            case 0 :
+                printErrorMessage(ERR_MISSIN_COMD);
+                break;
+            case 1 :
+                //printf("argc == 2\n");
+                oneWordCommands(words);
+                break;
+            case 2 :
+                twoWordsCommands(words);
+                //printf("argc == 3\n");
+                break;
+            case 3 :
+                threeWordsCommands(words);
+                //printf("argc == 4\n");
+                break;
+            default :
+                printErrorMessage(ERR_TOO_MANY_AG);
+                break;
+        }
     }
     return (0);
 }
 
-void oneWordCommands(char **argv)
+void oneWordCommands(char **words)
 {
-    if (strcmp("start", argv[1]) == 0)
+    if (strcmp("start", words[0]) == 0)
+    {
+        #warning start sniffing here
         printf("start\n");
-    else if (strcmp("stop", argv[1]) == 0)
+    }
+    else if (strcmp("stop", words[0]) == 0)
+    {
         printf("stop\n");
-    else if (strcmp("stat", argv[1]) == 0)
+        #warning save data here
+        exit(EXIT_SUCCESS);
+    }
+    else if (strcmp("stat", words[0]) == 0)
+    {
+        #warning showing stat here
         printf("all stat\n");
-    else if (strcmp("--help", argv[1]) == 0 || strcmp("-h", argv[1]) == 0)
-        printf ("help\n");
+    }
+    else if (strcmp("--help", words[0]) == 0 || strcmp("-h", words[0]) == 0)
+    {
+        printf("help\n");
+        #warning showing --help here
+    }
     else
-        someName(ERR_UKNOWN_COMD, argv[0] + 2);   // +2 for skiping ./
+        printErrorMessage(ERR_UKNOWN_COMD);
 }
 
-void twoWordsCommands(char **argv)
+void twoWordsCommands(char **words)
 {
-    if (strcmp("stat", argv[1]) == 0)
-        printf("Statistics for %s interface:\n");
+    if (strcmp("stat", words[0]) == 0)
+    {
+        if (!isValidIface(words[1]))
+            printErrorMessage(ERR_UKNOWN_IFAC);
+        else
+            printf("Statistics for %s interface:\n", words[1]);
+            #warning dosmth with showing all collected statistics for particular interface
+    }
     else
-        someName(ERR_UKNOWN_COMD, argv[0] + 2);
-    //some method is here
+        printErrorMessage(ERR_UKNOWN_COMD);
 }
 
-void threeWordsCommands(char **argv)
+void threeWordsCommands(char **words)
 {
-    
+    if (strcmp("show", words[0]) == 0)
+    {
+        if (!isValidIPAddress(words[1]))
+            printErrorMessage(ERR_BAD_IP_ADDR);
+        else if (strcmp("count", words[2]) == 0)
+            printf("Number of packets received from %s address: ", words[1]);
+            #warning dosmth with count number of packets received from ip address
+    }
+    else if (strcmp("select", words[0]) == 0 && strcmp("iface", words[1]) == 0)
+    {
+        if (!isValidIface(words[2]))
+            printErrorMessage(ERR_UKNOWN_IFAC);
+        else
+            printf ("Selected interface %s for sniffing", words[2]);
+            #warning dosmth with selecting interface for sniffing
+    }
 }
 
-void someName(short errno, char *program_name)
+void printErrorMessage(short errno)
 {
+
     switch(errno)
     {
         case ERR_MISSIN_COMD :
-            printf("%s: missing file operand\n", program_name);
+            printf("Missing file operand\n");
             break;
         case ERR_UKNOWN_COMD :
-            printf("%s: unknown file operand\n", program_name);
+            printf("Unknown file operand\n");
             break;
         case ERR_BAD_IP_ADDR :
-            printf("%s: bad ip address\n", program_name);
+            printf("Bad ip address\n");
             break;
-        case ERR_USUPPORT_IF :
-            printf("%s: unsupporting interface\n", program_name);
+        case ERR_UKNOWN_IFAC :
+            printf("Unknown interface\n");
+            break;
+        case ERR_TOO_MANY_AG :
+            printf("Too many arguments exeption\n");
             break;
         default :
-            printf("%s: unexpected error\n", program_name);
+            printf("Unexpected error\n");
             break;
     }
-    printf("Try '%s --help' for more information.\n", program_name);
+    printf("Try '--help' for more information.\n");
 }
